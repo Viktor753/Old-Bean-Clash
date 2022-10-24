@@ -50,16 +50,19 @@ public class PlayerManager : MonoBehaviourPunCallbacks
         readyToJoin = true;
 
 
-        if (PlayerStats.instance.teamID != -1 && BombAndDefuse.playerCanSpawnIn)
+        if (PlayerStats.instance.teamID != -1)
         {
-            if(localSpawnedPlayer == null)
+            if (BombAndDefuse.playerCanSpawnIn)
             {
-                SpawnLocalPlayer();
-            }
-            else
-            {
-                DeSpawnLocalPlayer();
-                SpawnLocalPlayer();
+                if (localSpawnedPlayer == null)
+                {
+                    SpawnLocalPlayer();
+                }
+                else
+                {
+                    DeSpawnLocalPlayer();
+                    SpawnLocalPlayer();
+                }
             }
         }
         else

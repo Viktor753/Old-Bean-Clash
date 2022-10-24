@@ -43,7 +43,7 @@ public class RangedWeapon : Weapon
             PlayerAudioManager.instance.PlaySpatialSoundAtPosition(onFireAudioKeys[Random.Range(0,onFireAudioKeys.Length)], gunBarrel.position, audioRange);
         }
         playerHandAnimator.SetTrigger(weaponFireAnimTrigger);
-        var effect = Instantiate(onFireEffectPrefab, gunBarrel.position, gunBarrel.rotation, gunBarrel);
+        var effect = Instantiate(onFireEffectPrefab, gunBarrel.position, gunBarrel.rotation);
         Destroy(effect, 5f);
     }
 }

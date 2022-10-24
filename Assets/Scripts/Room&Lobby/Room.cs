@@ -382,7 +382,7 @@ public class Room : MonoBehaviourPunCallbacks
     {
         Debug.Log("OnConnected");
         connectedToMaster = true;
-        gameVersionText.text = PhotonNetwork.GameVersion;
+        gameVersionText.text = $"{PhotonNetwork.GameVersion}, region: {PhotonNetwork.CloudRegion}";
     }
 
     public override void OnDisconnected(DisconnectCause cause)

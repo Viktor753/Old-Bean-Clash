@@ -9,6 +9,7 @@ public class PlayerMovement : MonoBehaviour
     public PlayerController playerController;
     public CharacterController controller;
     public float moveSpeed;
+    [HideInInspector] public float defaultSpeed;
     public float jumpHeight;
     public float gravity;
 
@@ -28,6 +29,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (pv.IsMine)
         {
+            defaultSpeed = moveSpeed;
             OnMatchStateUpdated(BombAndDefuse.instance.state);
         }
     }

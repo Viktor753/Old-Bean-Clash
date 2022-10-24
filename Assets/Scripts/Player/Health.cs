@@ -12,9 +12,15 @@ public class Health : MonoBehaviour
 
     public int baseHealth = 100;
     public int maxHealth = 100;
+
+
+    public int baseArmor = 0;
+    public int maxArmor = 100;
     [SerializeField] private int currentHealth = 0;
+    [SerializeField] private int currentArmor = 0;
 
     public Action<int,int> OnHealthChanged;
+    public Action<int, int> OnArmorChanged;
     public GameObject OnHitEffectPrefab;
     public Vector3 onHitEffectPositionOffset;
 
@@ -31,6 +37,22 @@ public class Health : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        if (pv.IsMine)
+        {
+            BombAndDefuse.OnPreRoundStart += RefillHealth;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (pv.IsMine)
+        {
+            BombAndDefuse.OnPreRoundStart -= RefillHealth;
+        }
+    }
+
     //Called by external clients
     public void Attack(int damage, Player damageSource, Vector3 attackOrigin, string weaponUsedKey)
     {
@@ -42,6 +64,9 @@ public class Health : MonoBehaviour
     {
         if (pv.IsMine)
         {
+            double reducedDamage = damage * Math.Pow(0.99, currentArmor);
+            damage = (int)reducedDamage;
+
             //Show damage indicator on screen to determine which direction enemy is
 
             if(currentHealth-damage <= 0)
@@ -50,8 +75,6 @@ public class Health : MonoBehaviour
                 var localTeam = (int)PhotonNetwork.LocalPlayer.CustomProperties[PlayerPropertyKeys.teamIDKey];
                 var damageSourceTeam = (int)damageSourceOwner.CustomProperties[PlayerPropertyKeys.teamIDKey];
                 var teamKill = localTeam == damageSourceTeam;
-                Debug.Log(localTeam + " <- local team");
-                Debug.Log(damageSourceTeam + " <- damage source team");
                 pv.RPC("OnKilledByPlayer", RpcTarget.All, damageSourceOwner, teamKill, weaponUsedKey);
             }
             SetHealth(currentHealth - damage);
@@ -77,6 +100,14 @@ public class Health : MonoBehaviour
             }
             PlayerStats.instance.UpdateKills();
         }
+    }
+
+    public void AddArmor(int armorAmountToAdd)
+    {
+        int oldArmor = currentArmor;
+        currentArmor += armorAmountToAdd;
+        currentArmor = Mathf.Clamp(currentArmor, 0, maxArmor);
+        OnArmorChanged?.Invoke(oldArmor, currentArmor);
     }
 
     //Called by owner of this object
@@ -121,5 +152,10 @@ public class Health : MonoBehaviour
     {
         var onHit = Instantiate(OnHitEffectPrefab, transform.position + onHitEffectPositionOffset, Quaternion.identity);
         Destroy(onHit, 3f);
+    }
+
+    private void RefillHealth()
+    {
+        SetHealth(baseHealth);
     }
 }

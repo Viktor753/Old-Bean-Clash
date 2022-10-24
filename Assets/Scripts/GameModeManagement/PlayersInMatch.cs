@@ -92,12 +92,9 @@ public class PlayersInMatch : MonoBehaviour
 
     public void SetLocalTeam(int teamIDToSet)
     {
-        if (PlayerStats.instance.teamID != teamIDToSet)
-        {
-            PlayerManager.selectedTeam = true;
-            PlayerStats.instance.teamID = teamIDToSet;
-            PlayerStats.instance.UpdateTeam();
-        }
+        PlayerManager.selectedTeam = true;
+        PlayerStats.instance.teamID = teamIDToSet;
+        PlayerStats.instance.UpdateTeam();
 
         teamSelectUI.SetActive(false);
     }

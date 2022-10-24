@@ -2,11 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using System.Linq.Expressions;
 
 public class PlayerUI : MonoBehaviour
 {
     public GameObject canvas;
     public TextMeshProUGUI healthText;
+    public TextMeshProUGUI armorText;
     public TextMeshProUGUI ammoText;
     public TextMeshProUGUI interactTextDisplay;
 
@@ -64,11 +66,13 @@ public class PlayerUI : MonoBehaviour
             StopCoroutine(healthFlashCoroutine);
         }
 
-
-        newHealthValue = Mathf.Clamp(newHealthValue, 0, Health.localInstance.maxHealth);
-
         healthFlashCoroutine = StartCoroutine(HealthFlashEffect(3, 0.2f, 0.3f, newHealthValue >= oldHealthValue ? Color.green : Color.red));
         healthText.text = newHealthValue.ToString();
+    }
+
+    private void OnArmorValueChanged(int oldArmorValue, int newArmorValue)
+    {
+        armorText.text = newArmorValue.ToString();
     }
 
 
@@ -88,8 +92,10 @@ public class PlayerUI : MonoBehaviour
     {
         canvas.SetActive(true);
         Health.localInstance.OnHealthChanged += OnHealthValueChanged;
+        Health.localInstance.OnArmorChanged += OnArmorValueChanged;
 
-        healthText.text = 100.ToString();
+        healthText.text = Health.localInstance.baseHealth.ToString();
+        armorText.text = Health.localInstance.baseArmor.ToString();
         ammoText.text = "0/0";
     }
 
@@ -97,8 +103,10 @@ public class PlayerUI : MonoBehaviour
     {
         canvas.SetActive(false);
         Health.localInstance.OnHealthChanged -= OnHealthValueChanged;
+        Health.localInstance.OnArmorChanged -= OnArmorValueChanged;
 
         healthText.text = 0.ToString();
+        armorText.text = 0.ToString();
         ammoText.text = "0/0";
     }
 

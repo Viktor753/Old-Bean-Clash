@@ -500,6 +500,11 @@ public class PlayerInventory : MonoBehaviour
                 PlayerManager.OnItemSwitched?.Invoke(itemsInInventory.IndexOf(item.Value));
                 pv.RPC("PlayAnim", RpcTarget.All, pullOutItemAnimatorTrigger);
                 OnItemSelected?.Invoke(item.Value);
+                item.Value.OnSelected();
+            }
+            else
+            {
+                item.Value.OnDeSelected();
             }
         }
     }
@@ -540,6 +545,15 @@ public class PlayerInventory : MonoBehaviour
         var itemPhotonView = PhotonView.Find(viewID);
         if (itemPhotonView != null)
         {
+            Item item = itemPhotonView.GetComponent<Item>();
+            if (show)
+            {
+                item.OnSelected();
+            }
+            else
+            {
+                item.OnDeSelected();
+            }
             itemPhotonView.gameObject.SetActive(show);
         }
     }

@@ -47,20 +47,22 @@ public class Weapon : Item
         }
     }
 
-    public override void OnEnable()
+    public override void OnSelected()
     {
+        base.OnSelected();
+
         if (pv.IsMine)
         {
-            base.OnEnable();
             BombAndDefuse.OnPreRoundStart += OnPreRoundStarted;
         }
     }
 
-    public override void OnDisable()
+    public override void OnDeSelected()
     {
+        base.OnDeSelected();
+
         if (pv.IsMine)
         {
-            base.OnDisable();
             BombAndDefuse.OnPreRoundStart -= OnPreRoundStarted;
 
             if (reloading)

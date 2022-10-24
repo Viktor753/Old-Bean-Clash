@@ -64,9 +64,12 @@ public class BombAndDefuse : MonoBehaviourPunCallbacks
 
     public ItemOnGround bombOnGround;
 
+    public AudioListener mainListener;
+
     private void Awake()
     {
         instance = this;
+        AudioListenerManager.SetCurrentAudioListener(mainListener);
     }
 
     private void Start()
@@ -113,6 +116,7 @@ public class BombAndDefuse : MonoBehaviourPunCallbacks
 
     private void Update()
     {
+
         if (PhotonNetwork.IsMasterClient)
         {
 
@@ -202,6 +206,7 @@ public class BombAndDefuse : MonoBehaviourPunCallbacks
         canUseItems = false;
         currentTimerVariable = endWarmUpDuration;
         UpdateMatchStateProperty(MatchState.WarmupEnding);
+        pv.RPC("SyncVariables", RpcTarget.All, false, bombPlanted, canUseItems);
         pv.RPC("DeSpawnAllPlayers", RpcTarget.All);
     }
 
@@ -271,6 +276,12 @@ public class BombAndDefuse : MonoBehaviourPunCallbacks
     private void SwitchSides()
     {
         int currentTeam = (int)PhotonNetwork.LocalPlayer.CustomProperties[PlayerPropertyKeys.teamIDKey];
+
+        if(currentTeam == -1)
+        {
+            return;
+        }
+
         int newTeam = -1;
         if(currentTeam == 0)
         {
@@ -281,7 +292,6 @@ public class BombAndDefuse : MonoBehaviourPunCallbacks
             newTeam = 0;
         }
         PlayersInMatch.instance.SetLocalTeam(newTeam);
-
 
         //Reduce death by 1, since switching sides will despawn player -> giving them 1 more death
         PlayerStats.instance.deaths--;
@@ -443,6 +453,48 @@ public class BombAndDefuse : MonoBehaviourPunCallbacks
         this.teamTwoAliveCount = TeamTwoAliveCount();
         OnTeamOneAliveCountUpdated?.Invoke(this.teamOneAliveCount);
         OnTeamTwoAliveCountUpdated?.Invoke(this.teamTwoAliveCount);
+
+        if (roundDecided)
+        {
+            return;
+        }
+
+        //Sometimes the aliveCount is not stable when we first spawn in players. Sometimes it caused one team to have 0 alive count...
+        if(state == MatchState.PreRound && roundsPlayed == 0)
+        {
+            return;
+        }
+
+        if(state != MatchState.RoundPlaying && state != MatchState.PreRound)
+        {
+            return;
+        }
+        if (bombPlanted)
+        {
+            if(teamOneAliveCount == 0)
+            {
+                //team two win
+                UpdateTeamTwoScore(teamTwoPoints + 1);
+                EndRound();
+                pv.RPC("PlayTeamTwoWinSound", RpcTarget.All);
+            }
+        }
+        else
+        {
+            if(teamOneAliveCount == 0)
+            {
+                UpdateTeamTwoScore(teamTwoPoints + 1);
+                EndRound();
+                pv.RPC("PlayTeamTwoWinSound", RpcTarget.All);
+            }
+            else if(teamTwoAliveCount == 0)
+            {
+                UpdateTeamOneScore(teamOnePoints + 1);
+                EndRound();
+                pv.RPC("PlayTeamOneWinSound", RpcTarget.All);
+            }
+        }
+
     }
 
     [PunRPC]
@@ -470,49 +522,12 @@ public class BombAndDefuse : MonoBehaviourPunCallbacks
 
     private void OnPlayerDeSpawned(Player player)
     {
+        FindObjectOfType<GameChat>().WriteMessage($"{player.NickName} despawned!");
+
         if(player == PhotonNetwork.LocalPlayer)
         {
             Invoke(nameof(RespawnPlayer), respawnTime);
-        }
-
-        if (PhotonNetwork.IsMasterClient)
-        {
-            if (roundDecided == false)
-            {
-                if (state == MatchState.RoundPlaying || state == MatchState.PreRound)
-                {
-                    if (bombPlanted)
-                    {
-                        if (this.teamOneAliveCount <= 0)
-                        {
-                            Debug.Log("TeamCount changed. Bomb planted, team two wins!");
-                            UpdateTeamTwoScore(teamTwoPoints + 1);
-                            EndRound();
-                            pv.RPC("PlayTeamTwoWinSound", RpcTarget.All);
-                        }
-                    }
-                    else
-                    {
-                        if (this.teamOneAliveCount <= 0)
-                        {
-                            //Team two won
-                            Debug.Log("TeamCount changed. Team two wins");
-                            UpdateTeamTwoScore(teamTwoPoints + 1);
-                            EndRound();
-                            pv.RPC("PlayTeamTwoWinSound", RpcTarget.All);
-                        }
-                        else if (this.teamTwoAliveCount <= 0)
-                        {
-                            //Team one won
-                            Debug.Log("TeamCount changed. Team one wins");
-                            UpdateTeamOneScore(teamOnePoints + 1);
-                            EndRound();
-                            pv.RPC("PlayTeamOneWinSound", RpcTarget.All);
-                        }
-                    }
-                }
-            }
-        }
+        } 
     }
 
     [ContextMenu("Plant bomb")]
@@ -616,7 +631,7 @@ public class BombAndDefuse : MonoBehaviourPunCallbacks
 
     private bool IsPlayerAllowedToSpawn()
     {
-        bool validState = state == MatchState.Warmup;
+        bool validState = state == MatchState.Warmup || state == MatchState.PreRound;
         return validState;
     }
 
@@ -642,6 +657,9 @@ public class BombAndDefuse : MonoBehaviourPunCallbacks
                     break;
                 case MatchState.Warmup:
                     state = MatchState.Warmup;
+                    break;
+                case MatchState.WarmupEnding:
+                    state = MatchState.WarmupEnding;
                     break;
                 case MatchState.PreRound:
                     state = MatchState.PreRound;

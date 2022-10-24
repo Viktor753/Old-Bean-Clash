@@ -18,21 +18,24 @@ public class Item : MonoBehaviour
     [HideInInspector] public bool itemPulledOut;
 
     [HideInInspector] public Animator playerHandAnimator;
-    
 
-    public virtual void OnEnable()
+    public virtual void OnSelected()
     {
+        if(playerHandAnimator == null)
+        {
+            if(transform.root.TryGetComponent<PlayerInventory>(out var inventory))
+            {
+                playerHandAnimator = inventory.inventoryHandAnimator;
+            }
+        }
+
         if (pv.IsMine)
         {
-            if (playerHandAnimator == null)
-            {
-                playerHandAnimator = PlayerInventory.instance.inventoryHandAnimator;
-            }
             Invoke(nameof(CompletePullOut), pullOutDuration);
         }
     }
 
-    public virtual void OnDisable()
+    public virtual void OnDeSelected()
     {
         if (pv.IsMine)
         {
@@ -40,6 +43,8 @@ public class Item : MonoBehaviour
             itemPulledOut = false;
         }
     }
+
+    
 
     private void CompletePullOut()
     {

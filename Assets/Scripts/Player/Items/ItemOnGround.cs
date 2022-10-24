@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
+using Unity.VisualScripting;
 
 public class ItemOnGround : MonoBehaviourPunCallbacks, IInteractable, DeleteOnRoundStart
 {
@@ -33,7 +34,8 @@ public class ItemOnGround : MonoBehaviourPunCallbacks, IInteractable, DeleteOnRo
     {
         if (pv.IsMine)
         {
-            if(transform.position.y < -100)
+            bool validGameState = BombAndDefuse.instance.state == MatchState.PreRound || BombAndDefuse.instance.state == MatchState.RoundPlaying;
+            if(transform.position.y < -100 && validGameState)
             {
                 transform.position = initSpawnPos;
             }

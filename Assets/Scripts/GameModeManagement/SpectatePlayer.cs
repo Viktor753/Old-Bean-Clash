@@ -23,15 +23,13 @@ public class SpectatePlayer : MonoBehaviourPunCallbacks
     {
         if (pv.IsMine == false)
         {
-            if (TryGetComponent<AudioListener>(out var listener))
-            {
-                listener.enabled = false;
-            }
+            GetComponent<AudioListener>().enabled = false;
             cam.enabled = false;
             spectateUI.SetActive(false);
         }
         else
         {
+            AudioListenerManager.SetCurrentAudioListener(GetComponent<AudioListener>());
             GetSpectatableTargets();
             Spectate(GetPlayer(spectateIndex));
         }
@@ -111,7 +109,6 @@ public class SpectatePlayer : MonoBehaviourPunCallbacks
 
     private void Spectate(Player player)
     {
-        Debug.Log($"Spectate '{player}'");
         SetupSpectateText(player);
 
         if(player == null)
@@ -137,10 +134,9 @@ public class SpectatePlayer : MonoBehaviourPunCallbacks
 
         if (playerCamToSpectate != null)
         {
-            
             transform.SetParent(playerCamToSpectate);
-            transform.localPosition = Vector3.zero;
-            transform.localRotation = Quaternion.Euler(0, 0, 0);
+            transform.position = playerCamToSpectate.position;
+            transform.rotation = playerCamToSpectate.rotation;
             currentSpectateTarget = player;
         }
     }
@@ -168,11 +164,18 @@ public class SpectatePlayer : MonoBehaviourPunCallbacks
         }
         else
         {
-            var playerName = spectateTarget.NickName.ToString();
-            var playerKills = spectateTarget.CustomProperties[PlayerPropertyKeys.killsKey].ToString();
-            var playerDeaths = spectateTarget.CustomProperties[PlayerPropertyKeys.deathsKey].ToString();
+            if ((bool)spectateTarget.CustomProperties[PlayerPropertyKeys.isDeadKey] == false)
+            {
+                var playerName = spectateTarget.NickName.ToString();
+                var playerKills = spectateTarget.CustomProperties[PlayerPropertyKeys.killsKey].ToString();
+                var playerDeaths = spectateTarget.CustomProperties[PlayerPropertyKeys.deathsKey].ToString();
 
-            spectateText.text = $"{playerName} - Kills : {playerKills} - Deaths {playerDeaths}";
+                spectateText.text = $"{playerName} - Kills : {playerKills} - Deaths {playerDeaths}";
+            }
+            else
+            {
+                spectateText.text = "Spectating none";
+            }
         }
     }
 
@@ -180,7 +183,6 @@ public class SpectatePlayer : MonoBehaviourPunCallbacks
     {
         if (pv.IsMine)
         {
-            Debug.Log("Player properties  for target " + targetPlayer.NickName + " changed - spectateplayer");
             bool changeSpectateTarget = false;
             if (spectatablePlayers.Contains(targetPlayer))
             {

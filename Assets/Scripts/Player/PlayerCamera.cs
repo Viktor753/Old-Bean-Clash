@@ -27,6 +27,8 @@ public class PlayerCamera : MonoBehaviour
             {
                 obj.SetActive(false);
             }
+
+            AudioListenerManager.SetCurrentAudioListener(GetComponent<AudioListener>());
         }
         else
         {

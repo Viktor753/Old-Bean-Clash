@@ -28,7 +28,16 @@ public class BombInHand : Item
     {
         if (pv.IsMine)
         {
-            if (BombAndDefuse.instance.state == MatchState.RoundPlaying && itemPulledOut && PauseMenuManager.paused == false && PlantSite.inSiteValue > 0)
+            
+            bool allowedGameState = BombAndDefuse.instance.state == MatchState.RoundPlaying || BombAndDefuse.instance.state == MatchState.RoundEnding;
+            bool paused = PauseMenuManager.paused;
+            bool canPlant = allowedGameState && itemPulledOut && paused == false && PlantSite.inSiteValue > 0;
+
+            Debug.Log("Bomb, allowed game state? " + allowedGameState);
+            Debug.Log("Bomb, paused? " + paused);
+            Debug.Log("Bomb, canPlant? " + canPlant);
+
+            if (canPlant)
             {
                 Debug.Log("Allowed to plant = true");
                 planting = Input.GetMouseButton(0) || Input.GetKey(KeyCode.E);
@@ -67,11 +76,11 @@ public class BombInHand : Item
         }
     }
 
-    public override void OnDisable()
+    public override void OnDeSelected()
     {
         if (pv.IsMine)
         {
-            base.OnDisable();
+            base.OnDeSelected();
             if (initPlantFlag)
             {
                 StopPlant();

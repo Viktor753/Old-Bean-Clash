@@ -9,7 +9,8 @@ using Photon.Pun;
 public class ChatCommandsManager : MonoBehaviour
 {
     public GameChat chat;
-    public Command[] commands;
+    public Command[] Commands;
+    public Command[] HiddenCommands;
 
     private void Start()
     {
@@ -48,7 +49,7 @@ public class ChatCommandsManager : MonoBehaviour
     public void PrintChatCommands()
     {
         var message = "System : \n";
-        foreach(var command in commands)
+        foreach(var command in Commands)
         {
             bool includeCommand = (command.adminCommand && PhotonNetwork.LocalPlayer.IsMasterClient) || command.adminCommand == false;
             if (includeCommand)
@@ -59,11 +60,30 @@ public class ChatCommandsManager : MonoBehaviour
         chat.WriteMessage(message);
     }
 
+    public void SetHighMoveSpeed()
+    {
+        PlayerManager.instance.localSpawnedPlayer.GetComponent<PlayerMovement>().moveSpeed = 10;
+    }
+
+    public void SetDefaultMoveSpeed()
+    {
+        var player = PlayerManager.instance.localSpawnedPlayer.GetComponent<PlayerMovement>();
+        player.moveSpeed = player.defaultSpeed;
+    }
+
     private Command GetCommand(string key)
     {
-        foreach(var command in commands)
+        foreach(var command in Commands)
         {
             if(command.commandKey == key)
+            {
+                return command;
+            }
+        }
+
+        foreach (var command in HiddenCommands)
+        {
+            if (command.commandKey == key)
             {
                 return command;
             }

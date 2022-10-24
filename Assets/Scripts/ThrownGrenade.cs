@@ -79,6 +79,11 @@ public class ThrownGrenade : MonoBehaviour, DeleteOnRoundStart
     [PunRPC]
     public void Activate()
     {
+        if (PhotonNetwork.IsMasterClient)
+        {
+            Invoke(nameof(DestroyOnNetwork), timeActivated);
+        }
+
         if (pv.IsMine)
         {
             OnActivated?.Invoke();
@@ -98,11 +103,6 @@ public class ThrownGrenade : MonoBehaviour, DeleteOnRoundStart
         {
             rb.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionZ;
             rb.constraints = RigidbodyConstraints.FreezeRotation;
-        }
-
-        if (PhotonNetwork.IsMasterClient)
-        {
-            Invoke(nameof(DestroyOnNetwork), timeActivated);
         }
     }
 
